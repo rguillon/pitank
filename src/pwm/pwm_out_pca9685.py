@@ -5,6 +5,7 @@
 
 # Import the PCA9685 module.
 import Adafruit_PCA9685
+import syslog
 
 from .pwm_out_itf import pwm_out_itf
 
@@ -24,4 +25,5 @@ class pwm_out(pwm_out_itf):
 
 
     def set(self, value: float):
+        syslog.syslog("New Value : %f for output %d"%(value,self.out_num))
         self.pwm.set_pwm(self.out_num, 0, int(value * 4095.0))
