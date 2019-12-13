@@ -1,7 +1,7 @@
 import json
-
 from MicroWebSrv2  import *
-from  devices import dimmer1, dimmer2, dimmer3
+import config
+
 
 @WebRoute(GET, '/light1', name='light1')
 def RequestTestPost(microWebSrv2, request) :

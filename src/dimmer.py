@@ -4,26 +4,54 @@
 
 import logging
 import asyncio
-
+import devices
+import syslog
+import yaml
+from rxjson import Rx
 logger = logging.getLogger("Dimmer")
 
 
-class Dimmer:
-    # Output dimmer, takes a time source, a time table. The service update will
-    # interpolate the output value from the table and the current time
-    # A safe output value allows to set a default value in case the time is not available
-    def __init__(self, name, timer, output, time_table, safe_output=0.0):
-        self.name = name
-        self.timer = timer
-        self.output = output
-        self.time_table = time_table
-        self.time_table.sort()
-        self.safe_output = safe_output
+schema = Rx.Factory({ "register_core_types": True }).make_schema(yaml.load("""
+type: //rec
+required:
+    name : //str
+    clock : //str
+    output : //str
+    schedule: //any
+"""))
+#        type : //arr
+#        length: { min: 1 }
+#        contents : //any
+
+class Dimmer():
+
+    def __init__(self, conf):
+        self.update_conf(conf)
+
+    def update_conf(self, conf):
+        global schema
+
+        if schema.check(conf):    
+
+            self.name = conf['name']
+            self.clock = devices.get(conf['clock'])
+            self.output = devices.get(conf['output'])
+            self.time_table = []
+            for t, v in conf['schedule'].items():
+                h,m,s = t.split(':')
+                sec = int(h)*3600+int(m)*60+int(s)
+                self.time_table.append([sec, v])
+            self.time_table.sort()
+        else:
+            raise Exception()
 
     def update(self):
         global logger
+        syslog.syslog("time table: " )
         v = 0.0
-        t = self.timer.get_time()
+        t = self.clock.get_time()
+        syslog.syslog("time table: " )
+        syslog.syslog(str(t))
         if t is not None:
             if t <= self.time_table[0][0]:
                 v = self.time_table[0][1]
@@ -40,6 +68,7 @@ class Dimmer:
             v = self.safe_output
 
         logger.info("Dimmer %s set %f at time %d" % (self.name, v, t))
+        syslog.syslog("Dimmer %s set %f at time %d" % (self.name, v, t))
         self.output.set(v)
 
 

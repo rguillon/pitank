@@ -1,28 +1,19 @@
 #!/usr/bin/python
-
-
-from pwm.pwm_out_pca9685 import pwm_out
-from clk.utc_clk import Utc_Clock
-
-from dimmer import Dimmer
+from web_srv import config_mws, mws2
 
 import asyncio
 
+from config import Config
+from dimmer import Dimmer
 
 def main():
-    clock = Utc_Clock()
+    conf = Config("conf.yaml")
 
-    time_table = [ [ 16*3600,0.0],[18*3600,1.0],[20*3600,1.0],[22*3600,0]]
+    dimmer1 = Dimmer(conf.get_conf()["dimmer1"])
+    dimmer2 = Dimmer(conf.get_conf()["dimmer2"])
+    dimmer3 = Dimmer(conf.get_conf()["dimmer3"])
 
-    pwm1 = pwm_out(0)
-    pwm2 = pwm_out(2)
-    pwm3 = pwm_out(4)
-
-    
-
-    dimmer1 = Dimmer("Output 1", clock, pwm1, time_table) 
-    dimmer2 = Dimmer("Output 2", clock, pwm2, time_table)
-    dimmer3 = Dimmer("Output 3", clock, pwm3, time_table) 
+    config_mws()
 
     main_loop = asyncio.get_event_loop()
 
@@ -30,10 +21,11 @@ def main():
     main_loop.create_task(dimmer2.get_task())
     main_loop.create_task(dimmer3.get_task())
 
-    main_loop.run_forever()
 
-#with daemon.DaemonContext():
-#    main()
+    # Starts the server as easily as possible in managed mode,
+    mws2.StartManaged()
+
+    main_loop.run_forever()
 
 if __name__ == "__main__":
     # execute only if run as a script

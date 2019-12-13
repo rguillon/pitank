@@ -1,0 +1,31 @@
+dimmer1:
+  clock: utc_clock
+  name: Main tank, warm white
+  output: pwm0
+  schedule:
+      '18:00:00': 0.0
+      '19:00:00': 1.0
+      '22:00:00': 1.0
+      '23:00:00': 0.0
+dimmer2:
+  clock: utc_clock
+  name: Main tank, cold white
+  output: pwm2
+  schedule:
+      '18:00:00': 0.0
+      '19:00:00': 1.0
+      '22:00:00': 1.0
+      '23:00:00': 0.0
+dimmer3:
+  clock: utc_clock
+  name: Tiny tank, cold white
+  output: pwm4
+  schedule:
+      '18:00:00': 0.0
+      '19:00:00': 1.0
+      '22:00:00': 1.0
+      '23:00:00': 0.0
+dimmer4:
+  clock: utc_clock
+  name: Tiny tank, cold white
+  output: pwm4
