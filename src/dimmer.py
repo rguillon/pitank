@@ -29,29 +29,31 @@ class Dimmer():
         self.update_conf(conf)
 
     def update_conf(self, conf):
-        global schema
-
-        if schema.check(conf):    
-
-            self.name = conf['name']
-            self.clock = devices.get(conf['clock'])
-            self.output = devices.get(conf['output'])
-            self.time_table = []
+        new_name = None
+        new_clock = None
+        new_output = None
+        new_time_table = None
+        try:
+            new_name = conf['name']
+            new_clock = devices.get(conf['clock'])
+            new_output = devices.get(conf['output'])
+            new_time_table = []
             for t, v in conf['schedule'].items():
                 h,m,s = t.split(':')
                 sec = int(h)*3600+int(m)*60+int(s)
-                self.time_table.append([sec, v])
-            self.time_table.sort()
-        else:
+                new_time_table.append([sec, v])
+            new_time_table.sort()
+        except :
             raise Exception()
+        self.name = new_name
+        self.clock = new_clock
+        self.output = new_output
+        self.time_table = new_time_table
 
     def update(self):
         global logger
-        syslog.syslog("time table: " )
         v = 0.0
         t = self.clock.get_time()
-        syslog.syslog("time table: " )
-        syslog.syslog(str(t))
         if t is not None:
             if t <= self.time_table[0][0]:
                 v = self.time_table[0][1]
@@ -68,7 +70,6 @@ class Dimmer():
             v = self.safe_output
 
         logger.info("Dimmer %s set %f at time %d" % (self.name, v, t))
-        syslog.syslog("Dimmer %s set %f at time %d" % (self.name, v, t))
         self.output.set(v)
 
 

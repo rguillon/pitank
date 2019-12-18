@@ -1,10 +1,20 @@
-import json
-from MicroWebSrv2  import *
-import config
+import yaml
+try:
+        from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+        from yaml import Loader, Dumper
 
+from MicroWebSrv2  import *
+from config import conf
+from tasks import tasks
 
 @WebRoute(GET, '/light1', name='light1')
 def RequestTestPost(microWebSrv2, request) :
+
+    dimmer_conf = yaml.dump(conf.get_conf('dimmer1'), Dumper = Dumper)
+
+    print(dimmer_conf)
+
     content = """\
         <!DOCTYPE html>
         <html>
@@ -17,26 +27,31 @@ def RequestTestPost(microWebSrv2, request) :
                 
                 <br />
                 <form action="/light1" method="post">
-                    Dimmer Table  <input type="text" name="table" value="%s", size=100><br />
-                    Test slider <input type="range" name="t1", min=0, max=4095>
-                    <br>
-                    <input type="submit" value="OK">
+                    Dimmer Table  i
+                    <br/>
+                    <textarea name="conf" rows="16" cols="32">%s</textarea>
+                    <br/>
+                    <input type="submit" value="Update">
                 </form>
            </body>
         </html>
-    """ % json.dumps(dimmer1.get_time_table())
+    """ % dimmer_conf
     request.Response.ReturnOk(content)
 
+#                    Dimmer Table  <input type="text" name="table" value="%s" style="font-size: 18pt; height: 1240px; width:600px; "><br />
 
 
 @WebRoute(POST, '/light1', name='light1 update')
 def RequestTestPost(microWebSrv2, request) :
     data = request.GetPostedURLEncodedForm()
     try :
-        new_schedule = json.loads(data['table'])
-        dimmer1.set_time_table(new_schedule)
-        print("OK")
-    except :
+        new_conf = yaml.load(data['conf'], Loader = Loader)
+        tasks.get_task('dimmer1').update_conf(new_conf)
+        #if the update_conf did not raise any exception, thn the conf if valid, save it
+        conf.set_conf('dimmer1', new_conf)
+        conf.save_conf()
+    except Exception as e:
+        print(e)
         request.Response.ReturnBadRequest()
         return
     request.Response.ReturnRedirectGet('/light1')
